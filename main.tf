@@ -60,7 +60,7 @@ resource "aws_security_group_rule" "ssh_from_my_ip" {
 
 resource "aws_instance" "from_my_ami" {
   ami           = data.aws_ami.my_ami.id
-  instance_type = "t2.micro"
+  instance_type = "t2.2xlarge"
 
   subnet_id                   = data.aws_subnets.default.ids[0]
   associate_public_ip_address = true
