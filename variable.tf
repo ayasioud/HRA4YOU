@@ -9,15 +9,28 @@ variable "ssm_param_name" {
   description = "SSM parameter name for ec2-user password"
   default     = "/hra4you/ssh/ec2-user-password"
 }
-variable "bootstrap_mode" {
+variable "target_vpc_name" {
   type        = string
-  description = "Bootstrap mode: prepare or run"
-  default     = "prepare"
-
-  validation {
-    condition     = contains(["prepare", "run"], var.bootstrap_mode)
-    error_message = "bootstrap_mode must be 'prepare' or 'run'."
-  }
+  description = "Name tag of the VPC where Apache is deployed"
 }
+variable "apache_private_ip" {
+  type        = string
+  description = "Private IP of Apache "
+}
+variable "apache_sg_name" {
+  type        = string
+  description = "Tag Name of Apache Security Group"
+}
+variable "apache_instance_id" {
+  type        = string
+  description = "Apache EC2 instance id"
+}
+variable "vpc_cidr" {
+  type = string
+  description = "VPC CIDR"
+}
+
+
+
 
 
