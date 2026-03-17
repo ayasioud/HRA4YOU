@@ -17,12 +17,25 @@ locals {
   my_ip_cidr = "${chomp(data.http.myip.response_body)}/32"
 }
 
+
+data "aws_lambda_invocation" "allocate_ssh_port" {
+  function_name = aws_lambda_function.allocate_port.function_name
+  input         = jsonencode({ version = data.archive_file.lambda_code.output_base64sha256 })
+  depends_on    = [aws_lambda_function.allocate_port]
+}
+
+locals {
+  port_response      = jsondecode(data.aws_lambda_invocation.allocate_ssh_port.result)
+  allocated_ssh_port = try(local.port_response.port, jsondecode(local.port_response.body).port)
+}
+
 data "aws_vpc" "target" {
   filter {
     name   = "tag:Name"
     values = [var.target_vpc_name]
   }
 }
+
 data "aws_subnets" "target" {
   filter {
     name   = "vpc-id"
@@ -157,6 +170,12 @@ echo "[ssh] configure sshd to allow password auth"
 
 cp -a /etc/ssh/sshd_config "/etc/ssh/sshd_config.bak.$(date +%F-%H%M%S)" || true
 
+if grep -qE '^[# ]*PubkeyAuthentication' /etc/ssh/sshd_config; then
+  sed -i 's/^[# ]*PubkeyAuthentication.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
+else
+  echo 'PubkeyAuthentication yes' >> /etc/ssh/sshd_config
+fi
+
 if grep -qE '^[# ]*PasswordAuthentication' /etc/ssh/sshd_config; then
   sed -i 's/^[# ]*PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
 else
@@ -169,6 +188,7 @@ else
   echo 'UsePAM yes' >> /etc/ssh/sshd_config
 fi
 
+sed -i '/^[# ]*AuthenticationMethods\b/d' /etc/ssh/sshd_config
 sed -i '/^[# ]*KbdInteractiveAuthentication\b/d' /etc/ssh/sshd_config
 sed -i '/^[# ]*ChallengeResponseAuthentication\b/d' /etc/ssh/sshd_config
 printf '\nKbdInteractiveAuthentication yes\nChallengeResponseAuthentication yes\n' >> /etc/ssh/sshd_config
@@ -176,7 +196,7 @@ printf '\nKbdInteractiveAuthentication yes\nChallengeResponseAuthentication yes\
 echo "[ssh] ensure ec2-user is UNLOCKED (fix LK issue)"
 passwd -u ec2-user 2>/dev/null || usermod -U ec2-user || true
 
- IMPORTANT (AL2023 / PAM): force bash instead of ksh
+# IMPORTANT (AL2023 / PAM): force bash instead of ksh
 usermod -s /bin/bash ec2-user 2>/dev/null || true
 
 echo "[pw] setting ec2-user password from Terraform value"
@@ -185,13 +205,13 @@ PASS='${random_password.ec2_user_password.result}'
 echo "ec2-user:$PASS" | chpasswd
 passwd -u ec2-user 2>/dev/null || usermod -U ec2-user || true
 chage -M 99999 -m 0 -W 7 ec2-user || true
-echo "[pw] password set ✅"
+echo "[pw] password set "
 
 
 if sshd -t; then
   systemctl restart sshd
   systemctl enable sshd
-  echo "[ssh] sshd restarted ✅"
+  echo "[ssh] sshd restarted "
 else
   echo "[ssh] ERROR: sshd config invalid"
 fi
@@ -261,9 +281,7 @@ else
   echo "[tns] skip (missing file or empty IP)"
 fi
 
-# -------------------------
-# 7) Cleanup block
-# -------------------------
+
 if [ ! -f "$FLAG" ]; then
   echo "[cleanup] first boot -> cleaning logs/work only"
 
@@ -317,13 +335,24 @@ fi
 echo "[user-data] end $(date -Is)"
 EOF
   tags = {
-    Name = "hra4you-ec2-from-ami"
+    Name = var.instance_name
   }
 }
 
 output "private_ip" {
   value = aws_instance.from_my_ami.private_ip
 }
+
 output "instance_id" {
   value = aws_instance.from_my_ami.id
+}
+
+output "allocated_ssh_port" {
+  value       = local.allocated_ssh_port
+  description = "Port SSH alloué pour accéder à l'instance via Apache"
+}
+
+output "ssh_connection_command" {
+  value       = "ssh -p ${local.allocated_ssh_port} ec2-user@${var.apache_private_ip}"
+  description = "Commande SSH pour se connecter à l'instance"
 }

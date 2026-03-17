@@ -1,0 +1,6 @@
+target_vpc_name    = "SHR_CLOUD_MULTICLIENT"
+apache_private_ip  = "10.10.0.219"
+apache_sg_name     = "SECURITYGROUP_SHR_CLOUD_MULTICLIENT_PUBLIC"
+apache_instance_id = "i-0918de2112d1d5b31"
+vpc_cidr           = "10.10.0.0/16"
+instance_name      = "hra4you-ec2"

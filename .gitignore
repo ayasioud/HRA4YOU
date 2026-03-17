@@ -5,9 +5,15 @@
 crash.log
 crash.*.log
 
-# Variables sensibles (souvent des secrets)
-*.tfvars
+
 *.tfvars.json
+
+# Fichiers temporaires Terraform
+tfplan
+*.zip
+
+# Fichiers temporaires Claude
+tmpclaude-*
 
 # Clés / secrets locaux
 keys/

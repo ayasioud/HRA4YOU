@@ -30,7 +30,14 @@ variable "vpc_cidr" {
   description = "VPC CIDR"
 }
 
+variable "base_ssh_port" {
+  type        = number
+  description = "Port SSH de base pour commencer l'allocation des ports"
+  default     = 2222
+}
 
-
-
+variable "instance_name" {
+  type        = string
+  description = "Nom de l'instance EC2 à créer"
+}
 
