@@ -1,0 +1,207 @@
+<div class="row">
+  <div class="col-sm-12">
+    <app-card cardTitle="Creation d'une instance" [options]="false">
+      <form #instanceForm="ngForm" (ngSubmit)="onCreateInstance()">
+<div class="row">
+  <!-- Nom de l'instance -->
+  <div class="form-group col-md-6">
+    <label for="instanceName">Nom de l'instance <span class="text-danger">*</span></label>
+    <input
+      type="text"
+      class="form-control"
+      [class.is-invalid]="instanceName.invalid && instanceName.touched"
+      [class.is-valid]="instanceName.valid && instanceName.touched"
+      id="instanceName"
+      name="instance_name"
+      [(ngModel)]="formData.instance_name"
+      placeholder="Ex: mon-instance-prod"
+      #instanceName="ngModel"
+      required
+      minlength="2"
+      maxlength="100"
+    />
+    <div class="invalid-feedback" *ngIf="instanceName.errors && instanceName.touched">
+      <span *ngIf="instanceName.errors['required']">Le nom est obligatoire.</span>
+      <span *ngIf="instanceName.errors['minlength']">Minimum 2 caractères.</span>
+      <span *ngIf="instanceName.errors['maxlength']">Maximum 100 caractères.</span>
+    </div>
+  </div>
+
+  <!-- Image -->
+<div class="form-group col-md-6">
+  <label for="imageId">Image</label>
+
+  <div class="input-group mb-2">
+    <div class="input-group-prepend" ngbDropdown placement="bottom-start">
+      <button class="btn btn-outline-secondary one-dropdown" ngbDropdownToggle type="button">
+        {{ selectedImageLabel || 'Selectionner une image' }}
+      </button>
+      <div ngbDropdownMenu>
+        <button
+          type="button"
+          class="dropdown-item"
+          *ngFor="let image of images"
+          (click)="selectImage(image.image_id, image.name)"
+        >
+          {{ image.name }}
+        </button>
+      </div>
+    </div>
+
+    <input
+      type="text"
+      class="form-control"
+      id="imageId"
+      name="image_id"
+      [(ngModel)]="formData.image_id"
+      placeholder="Saisir ou selectionner un ID AMI"
+      required
+    />
+  </div>
+
+  <small class="form-text text-muted" *ngIf="isLoadingImages">
+    Chargement des images...
+  </small>
+
+  <div class="text-danger mt-1" *ngIf="!formData.image_id && instanceForm.submitted">
+    Veuillez selectionner une image ou saisir un ID.
+  </div>
+</div>
+
+</div>
+
+<div class="row">
+  <!-- Type d'instance -->
+  <div class="form-group col-md-6">
+    <label for="instanceType">Type d'instance <span class="text-danger">*</span></label>
+
+    <div class="input-group mb-2">
+      <div class="input-group-prepend" ngbDropdown placement="bottom-start">
+        <button class="btn btn-outline-secondary one-dropdown" ngbDropdownToggle type="button">
+          {{ selectedInstanceTypeLabel || 'Dropdown' }}
+        </button>
+        <div ngbDropdownMenu>
+          <button
+            type="button"
+            class="dropdown-item"
+            *ngFor="let type of instanceTypes"
+            (click)="selectInstanceType(type.name)"
+          >
+            {{ type.name }}
+          </button>
+        </div>
+      </div>
+      <input
+        type="text"
+        class="form-control"
+        [value]="formData.instance_type"
+        placeholder="Type selectionne"
+        readonly
+      />
+    </div>
+
+    <small class="form-text text-muted" *ngIf="isLoadingInstanceTypes">
+      Chargement des types d'instance...
+    </small>
+    <div class="text-danger mt-1" *ngIf="!formData.instance_type && instanceForm.submitted">
+      Veuillez selectionner un type.
+    </div>
+  </div>
+
+  <!-- Stockage -->
+  <div class="form-group col-md-6">
+    <label for="storageSize">Stockage (GB) <span class="text-danger">*</span></label>
+    <input
+      type="number"
+      class="form-control"
+      [class.is-invalid]="storageSize.invalid && storageSize.touched"
+      [class.is-valid]="storageSize.valid && storageSize.touched"
+      id="storageSize"
+      name="storage_size"
+      [(ngModel)]="formData.storage_size"
+      #storageSize="ngModel"
+      required
+      min="1"
+      max="16000"
+    />
+    <div class="invalid-feedback" *ngIf="storageSize.errors && storageSize.touched">
+      <span *ngIf="storageSize.errors['required']">Le stockage est obligatoire.</span>
+      <span *ngIf="storageSize.errors['min']">Minimum 1 GB.</span>
+      <span *ngIf="storageSize.errors['max']">Maximum 16 000 GB.</span>
+    </div>
+  </div>
+</div>
+
+
+        <div class="row">
+
+          <!-- Créé par -->
+          <div class="form-group col-md-6">
+            <label for="createdBy">Cree par <span class="text-danger">*</span></label>
+            <input
+              type="text"
+              class="form-control"
+              [class.is-invalid]="createdBy.invalid && createdBy.touched"
+              [class.is-valid]="createdBy.valid && createdBy.touched"
+              id="createdBy"
+              name="created_by"
+              [(ngModel)]="formData.created_by"
+              placeholder="Nom du createur"
+              #createdBy="ngModel"
+              required
+              minlength="2"
+              maxlength="100"
+            />
+            <div class="invalid-feedback" *ngIf="createdBy.errors && createdBy.touched">
+              <span *ngIf="createdBy.errors['required']">Ce champ est obligatoire.</span>
+              <span *ngIf="createdBy.errors['minlength']">Minimum 2 caractères.</span>
+            </div>
+          </div>
+
+          <!-- Agence owner -->
+          <div class="form-group col-md-6">
+            <label for="ownerAgency">Agence owner <span class="text-danger">*</span></label>
+            <input
+              type="text"
+              class="form-control"
+              [class.is-invalid]="ownerAgency.invalid && ownerAgency.touched"
+              [class.is-valid]="ownerAgency.valid && ownerAgency.touched"
+              id="ownerAgency"
+              name="owner_agency"
+              [(ngModel)]="formData.owner_agency"
+              placeholder="Ex: Paris"
+              #ownerAgency="ngModel"
+              required
+              minlength="2"
+              maxlength="100"
+            />
+            <div class="invalid-feedback" *ngIf="ownerAgency.errors && ownerAgency.touched">
+              <span *ngIf="ownerAgency.errors['required']">Ce champ est obligatoire.</span>
+              <span *ngIf="ownerAgency.errors['minlength']">Minimum 2 caractères.</span>
+            </div>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          class="btn btn-primary mt-3"
+          [disabled]="isLoading || instanceForm.invalid"
+        >
+          {{ isLoading ? 'Creation en cours...' : 'Creer instance' }}
+        </button>
+
+      
+
+        <div class="alert alert-info mt-2" *ngIf="sshPortMessage">
+          <div>{{ sshPortMessage }}</div>
+          <div *ngIf="sshCommandMessage"><strong>Commande:</strong> {{ sshCommandMessage }}</div>
+        </div>
+
+        <div class="alert alert-danger mt-3" *ngIf="errorMessage">
+          <pre class="mb-0">{{ errorMessage }}</pre>
+        </div>
+
+      </form>
+    </app-card>
+  </div>
+</div>

@@ -1,0 +1,234 @@
+<div class="row">
+  <div class="col-sm-12">
+    <app-card cardTitle="Gestion des utilisateurs" [options]="false">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Liste des comptes</h5>
+
+        <button type="button" class="btn btn-primary" (click)="openAddUserModal(addUserModal)">
+          <i class="feather icon-user-plus"></i>
+          Ajouter un utilisateur
+        </button>
+      </div>
+
+      
+
+      
+
+      <small class="form-text text-muted" *ngIf="isLoading">
+        Chargement des utilisateurs...
+      </small>
+
+      <div class="table-responsive" *ngIf="!isLoading">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Statut</th>
+              <th>Date creation</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let user of paginatedUsers">
+              <td>{{ user.username }}</td>
+              <td>{{ user.email || '-' }}</td>
+              <td>{{ user.role }}</td>
+              <td>
+                <span class="badge" [ngClass]="user.is_active ? 'bg-success' : 'bg-danger'">
+                  {{ user.is_active ? 'Actif' : 'Inactif' }}
+                </span>
+              </td>
+              <td>{{ user.created_at | date: 'short' }}</td>
+            </tr>
+
+            <tr *ngIf="users.length === 0">
+              <td colspan="5" class="text-center text-muted">
+                Aucun utilisateur trouve.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav aria-label="Pagination utilisateurs" class="d-flex justify-content-center mt-3" *ngIf="!isLoading && totalPages > 1">
+        <ul class="pagination mb-0">
+          <li class="page-item" [class.disabled]="currentPage === 1">
+            <a class="page-link" href="javascript:void(0)" (click)="goToPage(currentPage - 1)">
+              Previous
+            </a>
+          </li>
+
+          <li
+            class="page-item"
+            *ngFor="let page of pages"
+            [class.active]="page === currentPage"
+          >
+            <a class="page-link" href="javascript:void(0)" (click)="goToPage(page)">
+              {{ page }}
+            </a>
+          </li>
+
+          <li class="page-item" [class.disabled]="currentPage === totalPages">
+            <a class="page-link" href="javascript:void(0)" (click)="goToPage(currentPage + 1)">
+              Next
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <ng-template #addUserModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">Ajouter un utilisateur</h5>
+    <button
+      type="button"
+      class="btn-close"
+      aria-label="Close"
+      (click)="modal.dismiss()"
+    ></button>
+  </div>
+
+  <form #userForm="ngForm" (ngSubmit)="createUser(modal)">
+    <div class="modal-body">
+      <div class="alert alert-danger" *ngIf="errorMessage">
+        <pre class="mb-0">{{ errorMessage }}</pre>
+      </div>
+
+      <div class="row">
+        <div class="form-group col-md-6">
+          <label for="username">Username <span class="text-danger">*</span></label>
+          <input
+            type="text"
+            class="form-control"
+            [class.is-invalid]="username.invalid && username.touched"
+            [class.is-valid]="username.valid && username.touched"
+            id="username"
+            name="username"
+            [(ngModel)]="newUser.username"
+            placeholder="Ex: admin2"
+            #username="ngModel"
+            required
+            minlength="3"
+            maxlength="50"
+            pattern="^[a-zA-Z0-9._-]+$"
+          />
+
+          <div class="invalid-feedback" *ngIf="username.errors && username.touched">
+            <span *ngIf="username.errors['required']">Le username est obligatoire.</span>
+            <span *ngIf="username.errors['minlength']">Minimum 3 caracteres.</span>
+            <span *ngIf="username.errors['maxlength']">Maximum 50 caracteres.</span>
+            <span *ngIf="username.errors['pattern']">Utilise lettres, chiffres, point, tiret ou underscore seulement.</span>
+          </div>
+        </div>
+
+        <div class="form-group col-md-6">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            class="form-control"
+            [class.is-invalid]="email.invalid && email.touched"
+            [class.is-valid]="email.valid && email.touched"
+            id="email"
+            name="email"
+            [(ngModel)]="newUser.email"
+            placeholder="Ex: admin2@sopra.com"
+            #email="ngModel"
+            email
+          />
+
+          <div class="invalid-feedback" *ngIf="email.errors && email.touched">
+            <span *ngIf="email.errors['email']">Email invalide.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="row mt-3">
+        <div class="form-group col-md-6 role-group">
+          <label>Role :</label>
+
+          <div class="role-options">
+            <div class="form-check form-check-inline">
+              <input
+                class="form-check-input"
+                type="radio"
+                id="roleAdmin"
+                name="role"
+                value="admin"
+                [(ngModel)]="newUser.role"
+              />
+              <label class="form-check-label" for="roleAdmin">Admin</label>
+            </div>
+
+            <div class="form-check form-check-inline">
+              <input
+                class="form-check-input"
+                type="radio"
+                id="roleUser"
+                name="role"
+                value="user"
+                [(ngModel)]="newUser.role"
+              />
+              <label class="form-check-label" for="roleUser">User</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group col-md-6">
+          <label for="password">Mot de passe <span class="text-danger">*</span></label>
+          <input
+            type="password"
+            class="form-control"
+            [class.is-invalid]="(password.invalid && password.touched) || passwordContainsUserData()"
+            [class.is-valid]="password.valid && password.touched && !passwordContainsUserData()"
+            id="password"
+            name="password"
+            [(ngModel)]="newUser.password"
+            placeholder="Mot de passe"
+            #password="ngModel"
+            required
+            minlength="6"
+            maxlength="100"
+          />
+
+          <div class="invalid-feedback" *ngIf="password.errors && password.touched">
+            <span *ngIf="password.errors['required']">Le mot de passe est obligatoire.</span>
+            <span *ngIf="password.errors['minlength']">Minimum 6 caracteres.</span>
+            <span *ngIf="password.errors['maxlength']">Maximum 100 caracteres.</span>
+          </div>
+
+          <div class="invalid-feedback d-block" *ngIf="passwordContainsUserData()">
+            Le mot de passe ne doit pas contenir le username ou l'adresse email.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button
+        type="button"
+        class="btn btn-outline-secondary"
+        (click)="modal.dismiss()"
+      >
+        <i class="feather icon-x"></i>
+        Annuler
+      </button>
+
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="userForm.invalid || passwordContainsUserData() || isCreating"
+      >
+        <i class="feather icon-check"></i>
+        {{ isCreating ? 'Creation...' : 'Enregistrer' }}
+      </button>
+    </div>
+  </form>
+</ng-template>
+
+      
+    </app-card>
+  </div>
+</div>
+
+

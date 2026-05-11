@@ -1,0 +1,10 @@
+fastapi==0.104.1
+uvicorn==0.24.0
+python-dotenv==1.0.0
+python-jose[cryptography]==3.3.0
+pydantic-settings==2.6.1
+boto3==1.39.4
+oracledb==2.5.1
+SQLAlchemy==2.0.36
+
+

@@ -1,26 +1,71 @@
-# Terraform
-.terraform/
-*.tfstate
-*.tfstate.*
-crash.log
-crash.*.log
+# ==================== TERRAFORM ====================
+Terraform/.terraform/
+Terraform/*.tfstate
+Terraform/*.tfstate.*
+Terraform/crash.log
+Terraform/crash.*.log
+Terraform/tfplan
+Terraform/*.tfvars.json
 
+# ==================== BACKEND (Python/FastAPI) ====================
+backend/venv/
+backend/.venv/
+backend/.env
+backend/.env.local
+backend/__pycache__/
+backend/*.pyc
+backend/*.pyo
+backend/*.egg-info/
+backend/dist/
+backend/build/
+backend/.pytest_cache/
+backend/.coverage
 
-*.tfvars.json
+# ==================== FRONTEND (Angular) ====================
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/npm-debug.log
+frontend/package-lock.json
 
-# Fichiers temporaires Terraform
-tfplan
-*.zip
+# ==================== DOCKER ====================
+*.log
 
-# Fichiers temporaires Claude
-tmpclaude-*
-
-# Clés / secrets locaux
+# ==================== CLÉS / SECRETS ====================
 keys/
 *.pem
 *.key
+*.crt
+*.pfx
 
-# OS / IDE
+# ==================== OS / IDE ====================
 .DS_Store
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+.project
+Terraform/terraform.tfvars
+Terraform/*.tfvars
+.classpath
+.c9/
+/.venv/
+/venv/
+
+# ==================== FICHIERS TEMPORAIRES ====================
+*.zip
+tmpclaude-*
+backend/.env.*
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+backend/*.egg-info/
+backend/dist/
+backend/build/
+backend/.pytest_cache/
+backend/.coverage
+
+# Generic local env files
+.env
+.env.*
